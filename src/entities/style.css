@@ -1,0 +1,42 @@
+/* Custom transitions */
+.modal-content { transition: transform 0.2s ease-out; }
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+
+/* Animation */
+.animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Vehicle Radio Button Styling */
+.vehicle-radio:checked + label {
+    background-color: #e0e7ff; /* indigo-100 */
+    border-color: #4f46e5; /* indigo-600 */
+    color: #4f46e5;
+}
+/* --- NOTIFICATIONS PAGE STYLES --- */
+
+/* Unread Notification: Left Border Blue */
+.notif-card.unread {
+    border-left: 4px solid #4f46e5; /* Indigo-600 */
+    background-color: #ffffff;
+}
+
+/* Read Notification: Left Border Gray */
+.notif-card.read {
+    border-left: 4px solid #e5e7eb; /* Gray-200 */
+    background-color: #f9fafb; /* Gray-50 */
+    opacity: 0.8;
+}
+
+/* Icon Containers */
+.notif-icon-box {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
