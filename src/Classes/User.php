@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Classes;
 
 use App\Database\Db;
@@ -9,15 +10,15 @@ class User
 {
 
     private $conn;
-    
+
     public $id;
     public $name;
     public $password;
     public $role;
     public $email;
     public $address;
-    public $orders=[];
-    
+    public $orders = [];
+
 
     public function __construct()
     {
@@ -45,48 +46,66 @@ class User
         return $this->email;
     }
 
-     public function add_object($obj){
-        array_push($this->orders,$obj);
+    public function add_object($obj)
+    {
+        array_push($this->orders, $obj);
     }
-    public function get_count(){
-        $stmt=$this->conn->prepare("select count(*) from orders");
-        $stmt->execute();
+    public function get_count($user_id)
+    {
+        $stmt = $this->conn->prepare("select count(*) from orders where user_id=?");
+        $stmt->execute([$user_id]);
+        return $result = $stmt->fetch();
     }
-    public function signup($name, $email, $password, $role,$address)
+    public function signup($name, $email, $password, $role, $address)
     {
         $stmt = $this->conn->prepare("INSERT INTO users (name, email, password, role,address) VALUES (?, ?, ?, ?,?)");
-         $stmt->execute([$name, $email, password_hash($password, PASSWORD_DEFAULT), $role,$address]);
+        $stmt->execute([$name, $email, password_hash($password, PASSWORD_DEFAULT), $role, $address]);
         header("location:login.php");
         exit;
     }
-
+    public function get_min_id($user_id)
+    {
+        $stmt = $this->conn->prepare("select min(id) from orders where user_id =?");
+        $stmt->execute([$user_id]);
+        return $result = $stmt->fetch();
+    }
+    public function get_max_id($user_id)
+    {
+        $stmt = $this->conn->prepare("select max(id) from orders where user_id =?");
+        $stmt->execute([$user_id]);
+        return $result = $stmt->fetch();
+    }
+    public function get_user_order_ids($user_id) {
+    $stmt = $this->conn->prepare("SELECT id FROM orders WHERE user_id = ? ORDER BY id DESC");
+    $stmt->execute([$user_id]);
+    
+    return $stmt->fetchAll(PDO::FETCH_COLUMN); 
+}
     public function login($email, $password)
     {
-        try{
-        $stmt = $this->conn->prepare("SELECT * FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->conn->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($result && password_verify($password, $result['password'])) {
-            $this->id = $result['id'];
-            $this->name = $result['name'];
-            $this->role = $result['role'];
-            $this->address =$result["address"];
-            session_start();
-            $_SESSION['id']   = $result['id'];
-            $_SESSION['role'] = $result['role'];
-           
+            if ($result && password_verify($password, $result['password'])) {
+                $this->id = $result['id'];
+                $this->name = $result['name'];
+                $this->role = $result['role'];
+                $this->address = $result["address"];
+                session_start();
+                $_SESSION['id']   = $result['id'];
+                $_SESSION['role'] = $result['role'];
+            }
+        } catch (PDOException $e) {
+            $e->getMessage();
+            echo $e;
         }
     }
-    catch(PDOException $e){
-     
-
-    }
-    }
-    public function logout(){
-        $_SESSION=array();
+    public function logout()
+    {
+        $_SESSION = array();
         session_destroy();
-        
     }
     public function show_order_list() {}
 
@@ -102,5 +121,3 @@ class User
 
     public function show_activity() {}
 }
-
-

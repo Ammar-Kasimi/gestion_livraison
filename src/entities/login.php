@@ -17,6 +17,7 @@ if(isset($_SESSION["id"])){
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["login_btn"])) {
     $user = new User;
     $user->login($_POST["email"], $_POST["password"]);
+    if(isset($_SESSION["role"])){
     if ($_SESSION['role'] == "client") {
         header("location:client.php");
         exit;
@@ -24,6 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["login_btn"])) {
     if ($_SESSION['role'] == "livreur") {
         header("location: livreur.php");
         exit;
+    }
     }
    
 }

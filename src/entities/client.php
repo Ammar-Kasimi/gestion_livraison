@@ -6,9 +6,14 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 use App\Classes\User;
 use App\Classes\Item;
 use App\Classes\Order;
+use App\Services\OrderService;
 
 $countt = 0;
 session_start();
+if (!isset($_SESSION["id"])) {
+    header("location:login.php");
+    exit();
+}
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['logout_btn'])) {
 
     $user = new User();
@@ -19,15 +24,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['logout_btn'])) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_order_btn'])) {
     $order = new Order();
-    $order->fill_order($_SESSION["id"], $_POST["title"], $_POST["address"]);
-    $order->insert_order($_SESSION["id"], $_POST["title"], $_POST["address"]);
+    $order->fill_order($_SESSION["id"], $_POST["order_title"], $_POST["order_address"]);
+    $order->insert_order($_SESSION["id"], $_POST["order_title"], $_POST["order_address"]);
     $order_id = $order->get_order_id();
     $order_items = $_POST["items"];
-    foreach ($order_items as $itemm) {
-        $item = new Item($itemm, $order_id);
-        $item->insert_item();
+    if (isset($_POST["items"])) {
+
+        foreach ($order_items as $itemm) {
+            $item = new Item($itemm, $order_id);
+            $item->insert_item();
+        }
     }
-    header("Location: login.php");
+
+    header("Location: client.php");
     exit();
 }
 
@@ -76,8 +85,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_order_btn'])) {
             </button>
         </div>
 
-        <div id="client-orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div id="order-card-1" class="order-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition duration-300">
+        <div id="client-orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
+
+            <!-- <div id="order-card-1" class="order-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition duration-300">
                 <div class="p-5">
                     <div class="flex justify-between items-start mb-4">
                         <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold uppercase">En Attente</span>
@@ -93,60 +103,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_order_btn'])) {
                     <button data-toggle="modal" data-target="modal-view-offers" class="text-indigo-600 font-semibold text-sm hover:text-indigo-800">Voir 2 Offres</button>
                     <button data-toggle="modal" data-target="modal-item-details" data-items="Laptop, Souris" class="text-gray-500 text-sm hover:text-gray-700 flex items-center gap-1"><i class="fas fa-eye"></i> Détails</button>
                 </div>
-                <?php
-                $user2 = new User();
+            </div> -->
+            <?php
+            $user2 = new User();
+            $service = new OrderService();
+            foreach ($user2->get_user_order_ids($_SESSION["id"]) as $i) {
+                $order = new Order();
+                $order->fetch_order($i);
+                $user2->add_object($order);
+                echo "<div class='bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition duration-300'>
+                <div class='p-5'>
+                    <div class='flex justify-between items-start mb-4'>
+                        <span class='bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold uppercase'>" . $order->status . "</span>
+                        <form action='' method='POST' class='flex gap-2'>
+                            <button type='button' id='edit_btn" . $i . "' class='edit-btn-trigger text-gray-400 hover:text-indigo-600 p-1'><i class='fas fa-pen'></i></button>
+                            <button type='submit' name='delete_order_btn" . $i . "' class='text-gray-400 hover:text-red-500 p-1'><i class='fas fa-trash'></i></button>
+                            
+                        </form>
+                    </div>
+                    <h3 class='card-title font-bold text-lg text-gray-800 mb-2'>" . $order->title . "</h3>
+                    <p class='text-sm text-gray-500 flex items-center gap-2'><i class='fas fa-map-marker-alt text-indigo-400'></i> <span class='card-address'>" . $order->address . "</span></p>
+                </div>
+                <input class='hidden order_card_id' value='$i' id='order_card_id" . $i . "'>
+                <div class='bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-between items-center'>
+                    <button class='text-indigo-600 font-semibold text-sm hover:text-indigo-800'>Voir Offres</button>
+                    <button class='text-gray-500 text-sm hover:text-gray-700 flex items-center gap-1'><i class='fas fa-eye'></i> Détails</button>
+                </div>
+                <div class='hidden card_items_container' >";
 
-                for ($i = 1; $i <= $user2->get_count(); $i++) {
-                    $order = new Order();
 
-                    $order->fetch_order($i);
-                    $user2->add_object($order);
-                    echo "<div class='bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition duration-300 mb-6'>
-    
-    <div class='p-5'>
-        <div class='flex justify-between items-start mb-4'>
-            
-            <span class='bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold uppercase'>
-                " . $order['status'] . "
-            </span>
+                $order_items = $service->get_repo()->get_order_items($i);
 
-            <form action='' method='POST' class='flex gap-2'>
-                <button type='submit' name='delete_order_btn'.$i.''class='text-gray-400 hover:text-indigo-600 p-1'>
-                    <i class='fas fa-pen'></i>
-                </button>
-                <button type='submit' name='offers_btn'.$i.'' class='text-gray-400 hover:text-red-500 p-1'>
-                    <i class='fas fa-trash'></i>
-                </button>
-
-                <input class='hidden' value='$i' id='order_card_id'$i''>
-                
-            </form >
-        </div>
-
-        <h3 class='font-bold text-lg text-gray-800 mb-2'>
-            " . $order['title'] . "
-        </h3>
-
-        <p class='text-sm text-gray-500 flex items-center gap-2'>
-            <i class='fas fa-map-marker-alt text-indigo-400'></i>
-            <span>" . $order['address'] . "</span>
-        </p>
-    </div>
-
-    <div class='bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-between items-center'>
-        <button class='text-indigo-600 font-semibold text-sm hover:text-indigo-800'>
-            Voir Offres
-        </button>
-        <button class='text-gray-500 text-sm hover:text-gray-700 flex items-center gap-1'>
-            <i class='fas fa-eye'></i> Détails
-        </button>
-    </div>
-
-</div>";
+                foreach ($order_items as $item) {
+                    echo "<span class='hidden-item' >" . $item['name'] . "</span>";
                 }
-                ?>
 
-            </div>
+                echo " </div>
+
+            </div>";
+            }
+            ?>
         </div>
     </main>
 
@@ -155,16 +151,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_order_btn'])) {
             <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
                 <h3 class="font-bold text-gray-800">Nouvelle Commande</h3><button id="new_order_btn" data-dismiss="modal-create-order" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
             </div>
-            <form id="form-create-order" action="" class="p-6 space-y-5">
-                <div><label class="block text-sm font-bold text-gray-700 mb-1">Titre</label><input type="text" id="create-title" class="w-full border rounded-lg p-3 text-sm"></div>
-                <div><label class="block text-sm font-bold text-gray-700 mb-1">Adresse</label><input type="text" id="create-address" class="w-full border rounded-lg p-3 text-sm"></div>
+            <form id="form-create-order" action="" method="POST" class="p-6 space-y-5">
+                <div><label class="block text-sm font-bold text-gray-700 mb-1">Titre</label><input type="text" id="create-title" name="order_title" class="w-full border rounded-lg p-3 text-sm"></div>
+                <div><label class="block text-sm font-bold text-gray-700 mb-1">Adresse</label><input type="text" id="create-address" name="order_address" class="w-full border rounded-lg p-3 text-sm"></div>
                 <div><label class="block text-sm font-bold text-gray-700 mb-1">Articles</label>
                     <div class="flex gap-2 mb-2"><input type="text" id="create-item-input" class="flex-1 border rounded-lg p-2 text-sm"><button type="button" id="btn-add-create-item" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg font-bold">+</button></div>
                     <div id="create-items-container" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto border border-dashed border-gray-300 p-2 rounded-lg bg-gray-50">
                         <p class="empty-msg text-xs text-gray-400 w-full text-center py-2">Aucun article ajouté</p>
                     </div>
                 </div>
-                <div class="flex justify-end gap-2 pt-2"><button type="button" data-dismiss="modal-create-order" class="text-gray-500 px-4 py-2 rounded">Annuler</button><button type="button" name="add_order_btn" id="btn-publish-order" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold shadow">Publier</button></div>
+                <div class="flex justify-end gap-2 pt-2"><button type="button" data-dismiss="modal-create-order" class="text-gray-500 px-4 py-2 rounded">Annuler</button><button type="submit" name="add_order_btn" id="btn-publish-order" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold shadow">Publier</button></div>
             </form>
         </div>
     </div>
@@ -174,7 +170,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_order_btn'])) {
             <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
                 <h3 class="font-bold text-gray-800">Modifier</h3><button data-dismiss="modal-edit-order" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
             </div>
-            <form id="form-edit-order" class="p-6 space-y-5">
+            <!-- <form id="form-edit-order" class="p-6 space-y-5">
                 <input type="hidden" id="edit-card-id">
                 <div><label class="block text-sm font-bold text-gray-700 mb-1">Titre</label><input type="text" id="edit-title" class="w-full border rounded-lg p-3 text-sm"></div>
                 <div><label class="block text-sm font-bold text-gray-700 mb-1">Adresse</label><input type="text" id="edit-address" class="w-full border rounded-lg p-3 text-sm"></div>
@@ -184,7 +180,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_order_btn'])) {
                         <p class="empty-msg text-xs text-gray-400 w-full text-center py-2">Aucun article ajouté</p>
                     </div>
                 </div>
-                <div class="flex justify-end gap-2 pt-2"><button type="button" data-dismiss="modal-edit-order" class="text-gray-500 px-4 py-2 rounded">Annuler</button><button type="button" id="btn-save-edit" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow">Sauvegarder</button></div>
+                <div class="flex justify-end gap-2 pt-2"><button type="button" data-dismiss="modal-edit-order" class="text-gray-500 px-4 py-2 rounded">Annuler</button><button type="submit" id="btn-save-edit" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow">Sauvegarder</button></div>
+            </form> -->
+            <form id="form-edit-order" action="../Controllers/orderController.php" method="POST" class="p-6 space-y-5">
+
+                <input type="hidden" id="edit-card-id" name="order_id">
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Titre</label>
+                    <input type="text" id="edit-title" name="title" class="w-full border rounded-lg p-3 text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Adresse</label>
+                    <input type="text" id="edit-address" name="address" class="w-full border rounded-lg p-3 text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Articles</label>
+
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="edit-item-input" placeholder="Ajouter un article" class="flex-1 border rounded-lg p-2 text-sm">
+                        <button type="button" id="btn-add-edit-item" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg font-bold hover:bg-indigo-200 transition">+</button>
+                    </div>
+
+                    <div id="edit-items-container" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto border border-dashed border-gray-300 p-2 rounded-lg bg-gray-50">
+                        <p class="empty-msg text-xs text-gray-400 w-full text-center py-2">Aucun article ajouté</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" data-dismiss="modal-edit-order" class="text-gray-500 px-4 py-2 rounded">Annuler</button>
+                    <button type="submit" name="update_order_btn" id="btn-save-edit" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition">Sauvegarder</button>
+                </div>
             </form>
         </div>
     </div>
@@ -212,7 +240,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_order_btn'])) {
             </div>
         </div>
     </div>
-
     <script src="script.js"></script>
 </body>
 

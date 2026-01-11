@@ -9,12 +9,12 @@ use App\Database\Db;
 class Order
 { 
     protected $id;
-    protected $title;
-    protected $status; 
-    protected $address;
-    protected $user_id;
-    protected $items=[];
-    protected $conn;
+    public $title;
+    public $status; 
+    public $address;
+    public $user_id;
+    public $items=[];
+    public $conn;
 
     public function __construct()
     {
@@ -35,7 +35,7 @@ class Order
     // public function create_order($title,$address,$items) {
 
     public function insert_order($user_id,$title,$address){
-        $stmt= $this->conn->prepare("insert into orders(user_id,titles,status,address) values(?,?,?,?)");
+        $stmt= $this->conn->prepare("insert into orders(user_id,title,status,address) values(?,?,?,?)");
        $stmt->execute([$user_id,$title,$this->status,$address]);
        $this->id=$this->conn->lastInsertId();
     }

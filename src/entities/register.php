@@ -1,6 +1,6 @@
 <?php
-require_once "src/Database/Db.php";
-require_once "src/Classes/user.php";
+require_once __DIR__ . '/../../vendor/autoload.php';
+use App\Classes\User;
 
 if($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["register_btn"])){
     $user = new User;
