@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_order_btn'])) {
     $order_id = $order->get_order_id();
     $order_items = $_POST["items"];
     if (isset($_POST["items"])) {
-
+    
         foreach ($order_items as $itemm) {
             $item = new Item($itemm, $order_id);
             $item->insert_item();

@@ -10,7 +10,7 @@ class OrderRepo
     private $conn;
     public function __construct()
     {
-        $database = new DB();
+        $database = new Db();
         $this->conn = $database->connect();
     }
     public function get_order_items($id)
